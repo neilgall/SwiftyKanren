@@ -33,7 +33,7 @@ extension Term: CustomStringConvertible {
     }
 }
 
-typealias Substitution = [Term: Term]
+typealias Substitutions = [Term: Term]
 
 extension Dictionary {
     func union(_ d: Dictionary<Key,Value>) -> Dictionary<Key, Value> {
@@ -60,40 +60,33 @@ func transpose<T>(_ matrix: [[T]]) -> [[T]] {
     return t
 }
 
-func walk(_ s: Substitution, _ t: Term) -> Term {
+func walk(_ s: Substitutions, _ t: Term) -> Term {
     switch t {
     case .variable:
-        return s[t].map({ x in walk(s, x) }) ?? t
+        return s[t].map{ walk(s, $0) } ?? t
     default:
         return t
     }
 }
 
-func unify(_ lhs: Term, _ rhs: Term, _ subs: Substitution) -> Substitution? {
-    let unified = unifyExpr(walk(subs, lhs), walk(subs, rhs))
-    return unified.map{$0.union(subs)}
-}
-
-func unifyExpr(_ lhs: Term, _ rhs: Term) -> Substitution? {
-    switch (lhs, rhs) {
-    case (.atom(let s), .atom(let t)) where s == t: return [:]
-    case (.variable, _): return [lhs: rhs]
-    case (_, .variable): return [rhs: lhs]
-    default: return nil
-    }
-}
-
 struct State {
-    let subs: Substitution
+    let subs: Substitutions
     let vars: Int
     
-    func with(subs newSubs: Substitution) -> State {
-        return State(subs: newSubs, vars: vars)
+    init(subs: Substitutions = [:], vars: Int = 0) {
+        self.subs = subs
+        self.vars = vars
     }
     
-    func newVar() -> (Term, State) {
-        let variable = Term.variable(vars)
-        return (variable, State(subs: subs, vars: vars+1))
+    func adding(subs newSubs: Substitutions) -> State {
+        return State(subs: subs.union(newSubs), vars: vars)
+    }
+    
+    func withNewVar(run f: (Term) -> Goal) -> [State] {
+        let newVar = Term.variable(vars)
+        let newState = State(subs: subs, vars: vars+1)
+        let goal = f(newVar)
+        return goal(newState)
     }
 }
 
@@ -104,44 +97,78 @@ extension State: CustomStringConvertible {
     }
 }
 
-typealias Goal = (State) -> [State]
+extension State {
+    func unify(_ lhs: Term, _ rhs: Term) -> [State] {
+        func unifyExpr(_ lhs: Term, _ rhs: Term) -> Substitutions? {
+            switch (lhs, rhs) {
+            case (.atom(let s), .atom(let t)) where s == t: return [:]
+            case (.variable, _): return [lhs: rhs]
+            case (_, .variable): return [rhs: lhs]
+            default: return nil
+            }
+        }
 
-infix operator ===
-func === (lhs: Term, rhs: Term) -> Goal {
-    return { state in
-        switch unify(lhs, rhs, state.subs) {
+        switch unifyExpr(walk(subs, lhs), walk(subs, rhs)) {
         case .none: return []
-        case .some(let subs_): return [state.with(subs: subs_)]
+        case .some(let newSubs): return [adding(subs: newSubs)]
         }
     }
 }
 
+typealias Goal = (State) -> [State]
+
+infix operator ===
+func === (lhs: Term, rhs: Term) -> Goal {
+    return { state in state.unify(lhs, rhs) }
+}
+
 func callFresh(_ f: @escaping (Term) -> Goal) -> Goal {
-    return { state in
-        let (newVar, nextState) = state.newVar()
-        let goal = f(newVar)
-        return goal(nextState)
-    }
+    return { state in state.withNewVar(run: f) }
 }
 
 func || (lhs: Goal, rhs: Goal) -> Goal {
-    return { state in
-        return Array(transpose([lhs(state), rhs(state)]).joined())
-    }
+    return { state in Array(transpose([lhs(state), rhs(state)]).joined()) }
 }
 
 func && (lhs: Goal, rhs: Goal) -> Goal {
-    return { state in
-        return lhs(state).flatMap(rhs)
+    return { state in lhs(state).flatMap(rhs) }
+}
+
+// Convenience fresh functions for introducing multiple variables at once
+func fresh(_ f: @escaping (Term, Term) -> Goal) -> Goal {
+    return callFresh { (a: Term) in
+        callFresh { (b: Term) in f((a,b)) }
+    }
+}
+func fresh(_ f: @escaping (Term, Term, Term) -> Goal) -> Goal {
+    return callFresh { (a: Term) in
+        callFresh { (b: Term) in
+            callFresh { (c: Term) in f((a,b,c)) }
+        }
+    }
+}
+func fresh(_ f: @escaping (Term, Term, Term, Term) -> Goal) -> Goal {
+    return callFresh { (a: Term) in
+        callFresh { (b: Term) in
+            callFresh { (c: Term) in
+                callFresh { (d: Term) in f((a,b,c,d)) }
+            }
+        }
     }
 }
 
-// -- Examples --
-let emptyState: State = State(subs: [:], vars: 0)
 
-// infinite streams not supported yet
-let five: Goal = callFresh { $0 === .atom("5") }
-let six: Goal = callFresh { $0 === .atom("6") }
+// -- Examples --
+let emptyState = State()
+
+// this will hang - infinite streams not supported yet
+//func fives_(_ t: Term) -> Goal {
+//    return (callFresh{ $0 === .atom("5") }) || fives_(t)
+//}
+//let fives = callFresh(fives_)
+
+let five: Goal = callFresh { x in x === .atom("5") }
+let six: Goal = callFresh { y in y === .atom("6") }
 
 (five || six)(emptyState).description
 (five && six)(emptyState).description
@@ -154,5 +181,3 @@ let fooState = State(subs: [.variable(1): .atom("foo")], vars: 0)
 
 aAndB(emptyState).description
 aAndB(fooState).description
-
-
