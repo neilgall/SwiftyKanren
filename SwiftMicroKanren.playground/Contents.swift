@@ -83,7 +83,7 @@ func unifyExpr(_ lhs: Term, _ rhs: Term) -> Substitution? {
     }
 }
 
-struct State: CustomStringConvertible {
+struct State {
     let subs: Substitution
     let vars: Int
     
@@ -95,7 +95,9 @@ struct State: CustomStringConvertible {
         let variable = Term.variable(vars)
         return (variable, State(subs: subs, vars: vars+1))
     }
-    
+}
+
+extension State: CustomStringConvertible {
     var description: String {
         let d = subs.map({ "\($0.0) = \($0.1)" }).joined(separator: ", ")
         return "[\(d)]"
@@ -145,8 +147,8 @@ let six: Goal = callFresh { $0 === .atom("6") }
 (five && six)(emptyState).description
 
 let aAndB: Goal =
-    callFresh { $0 === .atom("quark") }
-    && callFresh { ($0 === .atom("foo")) || ($0 === .atom("bar")) }
+    callFresh { a in a === .atom("quark") }
+    && callFresh { b in (b === .atom("foo")) || (b === .atom("bar")) }
 
 let fooState = State(subs: [.variable(1): .atom("foo")], vars: 0)
 
