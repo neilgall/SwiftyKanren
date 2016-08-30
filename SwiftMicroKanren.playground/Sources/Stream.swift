@@ -16,6 +16,7 @@ extension Stream {
         case (.mature(let h, let t), _):
             return .mature(head: h, tail: t + rhs)
         case (.immature(let get), _):
+            // interleave immature streams for a complete search strategy
             return .immature(get: { rhs + get() })
         }
     }
@@ -52,6 +53,16 @@ extension Stream {
             return .mature(head: head, tail: tail.take(count: count-1))
         case .immature(let get):
             return get().take(count: count)
+        }
+    }
+    
+    public func takeAll() -> Stream<T> {
+        switch self {
+        case .empty: return .empty
+        case .mature(let head, let tail):
+            return .mature(head: head, tail: tail.takeAll())
+        case .immature(let get):
+            return get().takeAll()
         }
     }
 }

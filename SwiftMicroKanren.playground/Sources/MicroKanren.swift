@@ -73,15 +73,15 @@ public struct State {
 
 extension State {
     func walk(_ t: Term) -> Term {
-        func recur(_ term: Term) -> Term {
+        func substitute(_ term: Term) -> Term {
             return subs[term].map(walk) ?? term
         }
         
         switch t {
         case .variable:
-            return recur(t)
+            return substitute(t)
         case .pair(let p, let q):
-            return .pair(recur(p), recur(q))
+            return .pair(substitute(p), substitute(q))
         default:
             return t
         }

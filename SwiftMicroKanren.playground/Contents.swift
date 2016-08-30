@@ -1,8 +1,6 @@
 // See http://webyrd.net/scheme-2013/papers/HemannMuKanren2013.pdf
 
 // -- Examples --
-let emptyState = State()
-
 func fives_(_ t: Term) -> Goal {
     return disj(fresh{ $0 =~= .atom("5") }, fives)
 }
@@ -13,14 +11,14 @@ func sixes_(_ t: Term) -> Goal {
 }
 let sixes = callFresh(sixes_)
 
-fives(emptyState).take(count: 5)
-disj(fives, sixes)(emptyState).take(count: 5)
+run(count: 5, goals: fives)
+run(count: 5, goals: disj(fives, sixes))
 
 let aAndB: Goal =
     callFresh { a in a =~= .atom("quark") }
         && callFresh { b in (b =~= .atom("foo")) || (b =~= .atom("bar")) }
 
-aAndB(emptyState)
+run(goals: aAndB)
 
 let pair: Goal =
     fresh { w,x,y,z in
@@ -29,5 +27,7 @@ let pair: Goal =
         && (y =~= .pair(z, .atom("end")))
         && (z =~= .atom("bar"))
 }
-pair(emptyState)
+
+run(goals: pair)
+
 
