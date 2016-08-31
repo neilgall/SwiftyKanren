@@ -55,14 +55,14 @@ public func conde(_ clauses: [Goal]...) -> Goal {
 // Convenience fresh functions for introducing multiple variables at once
 public func fresh(_ f: @escaping (Term, Term) -> Goal) -> Goal {
     return fresh { (a: Term) in
-        fresh { (b: Term) in f((a,b)) }
+        fresh { (b: Term) in f(a,b) }
     }
 }
 
 public func fresh(_ f: @escaping (Term, Term, Term) -> Goal) -> Goal {
     return fresh { (a: Term) in
         fresh { (b: Term) in
-            fresh { (c: Term) in f((a,b,c)) }
+            fresh { (c: Term) in f(a,b,c) }
         }
     }
 }
@@ -71,7 +71,7 @@ public func fresh(_ f: @escaping (Term, Term, Term, Term) -> Goal) -> Goal {
     return fresh { (a: Term) in
         fresh { (b: Term) in
             fresh { (c: Term) in
-                fresh { (d: Term) in f((a,b,c,d)) }
+                fresh { (d: Term) in f(a,b,c,d) }
             }
         }
     }
@@ -82,7 +82,7 @@ public func fresh(_ f: @escaping (Term, Term, Term, Term, Term) -> Goal) -> Goal
         fresh { (b: Term) in
             fresh { (c: Term) in
                 fresh { (d: Term) in
-                    fresh { (e: Term) in f((a,b,c,d,e)) }
+                    fresh { (e: Term) in f(a,b,c,d,e) }
                 }
             }
         }

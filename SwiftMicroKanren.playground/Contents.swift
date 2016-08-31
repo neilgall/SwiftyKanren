@@ -1,17 +1,14 @@
 // -- Examples --
 
-func fives_(_ t: Term) -> Goal {
-    return fresh{ $0 =~= 5 } || fives
+func fives(t: Term) -> Goal {
+    return fresh { $0 =~= 5 } || fresh(fives)
 }
-let fives: Goal = fresh(fives_)
-
-func sixes_(_ t: Term) -> Goal {
-    return fresh{ $0 =~= 6 } || sixes
+func sixes(t: Term) -> Goal {
+    return fresh{ $0 =~= 6 } || fresh(sixes)
 }
-let sixes: Goal = fresh(sixes_)
 
-run(taking: 10, from: [fives])
-run(taking: 10, from: [fives || sixes])
+run(taking: 10, from: [fresh(fives)])
+run(taking: 10, from: [fresh(fives) || fresh(sixes)])
 
 run {
     a, b in [
@@ -29,12 +26,19 @@ run {
 }
 
 run {
-    w,x,y,z in [
-        w =~= .pair(x, y),
-        x =~= "foo",
-        y =~= .pair(z, "end"),
-        z =~= "bar"
-    ]
+    [appendo($0, [4,5], [1,2,3,4,5])]
 }
 
+run {
+    [appendo([1,2], $0, [1,2,3,4,5])]
+}
+
+
+run {
+    [appendo([1,2], [3,4,5], $0)]
+}
+
+run {
+    [appendo($0, $1, [1,2,3,4,5])]
+}
 

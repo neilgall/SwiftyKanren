@@ -22,11 +22,11 @@ public struct State {
         self.vars = vars
     }
     
-    func adding(subs newSubs: Substitutions) -> State {
+    public func adding(subs newSubs: Substitutions) -> State {
         return State(subs: subs.union(newSubs), vars: vars)
     }
     
-    func withNewVar(run f: (Term) -> Goal) -> Stream<State> {
+    public func withNewVar(run f: (Term) -> Goal) -> Stream<State> {
         let newVar = Term.variable(vars)
         let newState = State(subs: subs, vars: vars+1)
         let goal = f(newVar)
@@ -61,6 +61,9 @@ extension State {
         
         case (.bool(let b1), .bool(let b2)) where b1 == b2:
             return [:]
+            
+        case (.none, .none):
+            return [:]
 
         case (.pair(let p1, let q1), .pair(let p2, let q2)):
             if let p = unifyExpr(p1, p2), let q = unifyExpr(q1, q2) {
@@ -80,7 +83,7 @@ extension State {
         }
     }
     
-    func unify(_ lhs: Term, _ rhs: Term) -> Stream<State> {
+   public func unify(_ lhs: Term, _ rhs: Term) -> Stream<State> {
         switch unifyExpr(walk(lhs), walk(rhs)) {
         case .none: return []
         case .some(let newSubs): return [adding(subs: newSubs)]

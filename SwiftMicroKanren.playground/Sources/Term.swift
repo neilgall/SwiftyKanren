@@ -1,6 +1,7 @@
 import Foundation
 
 public enum Term {
+    case none
     case string(String)
     case int(Int)
     case bool(Bool)
@@ -11,6 +12,7 @@ public enum Term {
 extension Term: Equatable {
     public static func == (lhs: Term, rhs: Term) -> Bool {
         switch (lhs, rhs) {
+        case (.none, .none): return true
         case (.variable(let v1), .variable(let v2)): return v1 == v2
         case (.string(let s1), .string(let s2)): return s1 == s2
         case (.int(let i1), .int(let i2)): return i1 == i2
@@ -24,6 +26,7 @@ extension Term: Equatable {
 extension Term: Hashable {
     public var hashValue: Int {
         switch self {
+        case .none: return 0
         case .variable(let n): return n.hashValue
         case .string(let s): return s.hashValue
         case .int(let i): return i.hashValue
@@ -36,12 +39,19 @@ extension Term: Hashable {
 extension Term: CustomStringConvertible {
     public var description: String {
         switch self {
+        case .none: return "nil"
         case .variable(let n): return ".\(n)"
         case .string(let s): return "\"\(s)\""
         case .int(let i): return "\(i)"
         case .bool(let b): return "\(b)"
         case .pair(let p, let q): return "(\(p),\(q))"
         }
+    }
+}
+
+extension Term: ExpressibleByNilLiteral {
+    public init(nilLiteral: ()) {
+        self = .none
     }
 }
 
@@ -68,6 +78,12 @@ extension Term: ExpressibleByStringLiteral {
     
     public init(unicodeScalarLiteral value: UnicodeScalar) {
         self = .string(String(value))
+    }
+}
+
+extension Term: ExpressibleByArrayLiteral {
+    public init(arrayLiteral elements: Term...) {
+        self = elements.reversed().reduce(.none) { list, element in .pair(element, list) }
     }
 }
 
@@ -104,12 +120,7 @@ extension Match {
             self = .bool(b)
         case .pair(let a, let b):
             let ma = Match(term: a)
-            let mb = Match(term: b)
-            if ma != .none && mb != .none {
-                self = .pair(ma, mb)
-            } else {
-                self = .none
-            }
+            self = (ma == .none) ? .none : .pair(ma, Match(term: b))
         default:
             self = .none
         }
