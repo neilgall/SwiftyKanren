@@ -1,42 +1,5 @@
 import Foundation
 
-public enum Term {
-    case atom(String)
-    case variable(Int)
-    indirect case pair(Term, Term)
-}
-
-extension Term: Equatable {
-    public static func == (lhs: Term, rhs: Term) -> Bool {
-        switch (lhs, rhs) {
-        case (.variable(let v1), .variable(let v2)): return v1 == v2
-        case (.atom(let a1), .atom(let a2)): return a1 == a2
-        case (.pair(let p1, let q1), .pair(let p2, let q2)): return p1 == p2 && q1 == q2
-        default: return false
-        }
-    }
-}
-
-extension Term: Hashable {
-    public var hashValue: Int {
-        switch self {
-        case .variable(let n): return n.hashValue
-        case .atom(let s): return s.hashValue
-        case .pair(let p, let q): return p.hashValue ^ q.hashValue
-        }
-    }
-}
-
-extension Term: CustomStringConvertible {
-    public var description: String {
-        switch self {
-        case .variable(let n): return ".\(n)"
-        case .atom(let s): return "\"\(s)\""
-        case .pair(let p, let q): return "(\(p),\(q))"
-        }
-    }
-}
-
 public typealias Substitutions = [Term: Term]
 public typealias Goal = (State) -> Stream<State>
 
@@ -89,18 +52,29 @@ extension State {
     
     func unifyExpr(_ lhs: Term, _ rhs: Term) -> Substitutions? {
         switch (lhs, rhs) {
-        case (.atom(let s), .atom(let t)) where s == t:
+
+        case (.string(let s1), .string(let s2)) where s1 == s2:
             return [:]
+        
+        case (.int(let i1), .int(let i2)) where i1 == i2:
+            return [:]
+        
+        case (.bool(let b1), .bool(let b2)) where b1 == b2:
+            return [:]
+
         case (.pair(let p1, let q1), .pair(let p2, let q2)):
             if let p = unifyExpr(p1, p2), let q = unifyExpr(q1, q2) {
                 return p.union(q)
             } else {
                 return nil
             }
+
         case (.variable, _):
             return [lhs: rhs]
+        
         case (_, .variable):
             return [rhs: lhs]
+        
         default:
             return nil
         }
@@ -119,23 +93,5 @@ extension State: CustomStringConvertible {
         let d = subs.map({ "\($0.0) = \($0.1)" }).joined(separator: ", ")
         return "[\(d)]"
     }
-}
-
-
-infix operator =~=
-public func =~= (lhs: Term, rhs: Term) -> Goal {
-    return { state in state.unify(lhs, rhs) }
-}
-
-public func callFresh(_ f: @escaping (Term) -> Goal) -> Goal {
-    return { state in state.withNewVar(run: f) }
-}
-
-public func || (lhs: Goal, rhs: Goal) -> Goal {
-    return { state in lhs(state) + rhs(state) }
-}
-
-public func && (lhs: Goal, rhs: Goal) -> Goal {
-    return { state in lhs(state).flatMap(rhs) }
 }
 
