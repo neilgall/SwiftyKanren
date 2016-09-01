@@ -7,8 +7,8 @@ func sixes(t: Term) -> Goal {
     return fresh{ $0 =~= 6 } || fresh(sixes)
 }
 
-run(taking: 10, from: [fresh(fives)])
-run(taking: 10, from: [fresh(fives) || fresh(sixes)])
+run(taking: 10, goals: [fresh(fives)])
+run(taking: 10, goals: [fresh(fives) || fresh(sixes)])
 
 run {
     [appendo($0, [4,5], [1,2,3,4,5])]

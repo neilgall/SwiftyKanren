@@ -120,7 +120,7 @@ private func take(from goal: Goal, results count: Int?) -> Stream<State> {
 }
 
 // Run
-public func run(taking count: Int? = nil, from goals: [Goal]) -> KanrenResult {
+public func run(taking count: Int? = nil, goals: [Goal]) -> KanrenResult {
     return take(from: conj_(goals), results: count).map(reifyMatching)
 }
 
