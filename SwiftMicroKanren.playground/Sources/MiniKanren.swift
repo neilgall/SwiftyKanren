@@ -8,17 +8,29 @@ public func appendo(_ xs: Term, _ ys: Term, _ zs: Term) -> Goal {
     return
         (xs =~= nil && ys =~= zs)
         ||
-        fresh { xh, xt, zt in conj(
-            xs =~= .pair(xh, xt),
-            zs =~= .pair(xh, zt),
-            appendo(xt, ys, zt)
+        fresh { xhead, xtail, ztail in conj(
+            xs =~= .pair(xhead, xtail),
+            zs =~= .pair(xhead, ztail),
+            appendo(xtail, ys, ztail)
     )}
 }
 
 public func membero(_ x: Term, _ ys: Term) -> Goal {
     return
-        fresh { h, t in conj(
-            .pair(h, t) =~= ys,
-            x =~= h || membero(x, t)
-        )}
+        fresh { head, tail in
+            .pair(head, tail) =~= ys && (x =~= head || membero(x, tail))
+        }
+}
+
+public func lengtho(_ length: Term, _ xs: Term) -> Goal {
+    return
+        conj(xs =~= nil, length =~= 0)
+        ||
+        fresh { head, tail, tailLength in
+            conj(
+                .pair(head, tail) =~= xs,
+                 lengtho(tailLength, tail),
+                 length =~= tailLength + 1
+            )
+        }
 }

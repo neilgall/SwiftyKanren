@@ -6,7 +6,7 @@ public func trace(_ name: String) -> GoalDecorator {
     return { goal in
         return { incomingState in
             let outgoingStates = goal(incomingState)
-            print("\(name)(\(incomingState)) -> \(outgoingStates)")
+            print("\(name)(\(incomingState)) -> \(outgoingStates.takeAll())")
             return outgoingStates
         }
     }

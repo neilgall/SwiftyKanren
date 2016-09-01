@@ -6,19 +6,39 @@ public enum Term {
     case int(Int)
     case bool(Bool)
     case variable(Int)
+    indirect case binaryExpression(Term, BinaryOperation, Term)
     indirect case pair(Term, Term)
+}
+
+public enum BinaryOperation: String {
+    case plus = "+"
+    case minus = "-"
+    case multiply = "*"
+    case divide = "/"
+    case mod = "%"
+    case and = "&&"
+    case or = "||"
 }
 
 extension Term: Equatable {
     public static func == (lhs: Term, rhs: Term) -> Bool {
         switch (lhs, rhs) {
-        case (.none, .none): return true
-        case (.variable(let v1), .variable(let v2)): return v1 == v2
-        case (.string(let s1), .string(let s2)): return s1 == s2
-        case (.int(let i1), .int(let i2)): return i1 == i2
-        case (.bool(let b1), .bool(let b2)): return b1 == b2
-        case (.pair(let p1, let q1), .pair(let p2, let q2)): return p1 == p2 && q1 == q2
-        default: return false
+        case (.none, .none):
+            return true
+        case (.variable(let v1), .variable(let v2)):
+            return v1 == v2
+        case (.string(let s1), .string(let s2)):
+            return s1 == s2
+        case (.int(let i1), .int(let i2)):
+            return i1 == i2
+        case (.bool(let b1), .bool(let b2)):
+            return b1 == b2
+        case (.pair(let p1, let q1), .pair(let p2, let q2)):
+            return p1 == p2 && q1 == q2
+        case (.binaryExpression(let t11, let op1, let t12), .binaryExpression(let t21, let op2, let t22)):
+            return t11 == t21 && op1 == op2 && t12 == t22
+        default:
+            return false
         }
     }
 }
@@ -26,12 +46,20 @@ extension Term: Equatable {
 extension Term: Hashable {
     public var hashValue: Int {
         switch self {
-        case .none: return 0
-        case .variable(let n): return n.hashValue
-        case .string(let s): return s.hashValue
-        case .int(let i): return i.hashValue
-        case .bool(let b): return b.hashValue
-        case .pair(let p, let q): return p.hashValue ^ q.hashValue
+        case .none:
+            return 0
+        case .variable(let n):
+            return n.hashValue
+        case .string(let s):
+            return s.hashValue
+        case .int(let i):
+            return i.hashValue
+        case .bool(let b):
+            return b.hashValue
+        case .pair(let p, let q):
+            return (p.hashValue * 31) ^ q.hashValue
+        case .binaryExpression(let t1, let op, let t2):
+            return ((t1.hashValue * 31) ^ op.hashValue * 31) ^ t2.hashValue
         }
     }
 }
@@ -39,12 +67,20 @@ extension Term: Hashable {
 extension Term: CustomStringConvertible {
     public var description: String {
         switch self {
-        case .none: return "nil"
-        case .variable(let n): return ".\(n)"
-        case .string(let s): return "\"\(s)\""
-        case .int(let i): return "\(i)"
-        case .bool(let b): return "\(b)"
-        case .pair(let p, let q): return "(\(p), \(q))"
+        case .none:
+            return "nil"
+        case .variable(let n):
+            return ".\(n)"
+        case .string(let s):
+            return "\"\(s)\""
+        case .int(let i):
+            return "\(i)"
+        case .bool(let b):
+            return "\(b)"
+        case .pair(let p, let q):
+            return "(\(p), \(q))"
+        case .binaryExpression(let t1, let op, let t2):
+            return "\(t1) \(op) \(t2)"
         }
     }
 }
@@ -84,6 +120,96 @@ extension Term: ExpressibleByStringLiteral {
 extension Term: ExpressibleByArrayLiteral {
     public init(arrayLiteral elements: Term...) {
         self = elements.reversed().reduce(.none) { list, element in .pair(element, list) }
+    }
+}
+
+// String operations
+extension Term {
+    public static func + (lhs: Term, rhs: String) -> Term {
+        return .binaryExpression(lhs, .plus, .string(rhs))
+    }
+    public static func + (lhs: String, rhs: Term) -> Term {
+        return .binaryExpression(.string(lhs), .plus, rhs)
+    }
+}
+
+// Integer arithmetic
+extension Term {
+    public static func + (lhs: Term, rhs: Int) -> Term {
+        return .binaryExpression(lhs, .plus, .int(rhs))
+    }
+    public static func + (lhs: Int, rhs: Term) -> Term {
+        return .binaryExpression(.int(lhs), .plus, rhs)
+    }
+
+    public static func - (lhs: Term, rhs: Int) -> Term {
+        return .binaryExpression(lhs, .minus, .int(rhs))
+    }
+    public static func - (lhs: Int, rhs: Term) -> Term {
+        return .binaryExpression(.int(lhs), .minus, rhs)
+    }
+    public static func - (lhs: Term, rhs: Term) -> Term {
+        return .binaryExpression(lhs, .minus, rhs)
+    }
+    
+    public static func * (lhs: Term, rhs: Int) -> Term {
+        return .binaryExpression(lhs, .multiply, .int(rhs))
+    }
+    public static func * (lhs: Int, rhs: Term) -> Term {
+        return .binaryExpression(.int(lhs), .multiply, rhs)
+    }
+    public static func * (lhs: Term, rhs: Term) -> Term {
+        return .binaryExpression(lhs, .multiply, rhs)
+    }
+    
+    public static func / (lhs: Term, rhs: Int) -> Term {
+        return .binaryExpression(lhs, .divide, .int(rhs))
+    }
+    public static func / (lhs: Int, rhs: Term) -> Term {
+        return .binaryExpression(.int(lhs), .divide, rhs)
+    }
+    public static func / (lhs: Term, rhs: Term) -> Term {
+        return .binaryExpression(lhs, .divide, rhs)
+    }
+
+    public static func % (lhs: Term, rhs: Int) -> Term {
+        return .binaryExpression(lhs, .mod, .int(rhs))
+    }
+    public static func % (lhs: Int, rhs: Term) -> Term {
+        return .binaryExpression(.int(lhs), .mod, rhs)
+    }
+    public static func % (lhs: Term, rhs: Term) -> Term {
+        return .binaryExpression(lhs, .mod, rhs)
+    }
+}
+
+// Boolean operations
+extension Term {
+    public static func && (lhs: Term, rhs: Bool) -> Term {
+        return .binaryExpression(lhs, .and, .bool(rhs))
+    }
+    public static func && (lhs: Bool, rhs: Term) -> Term {
+        return .binaryExpression(.bool(lhs), .and, rhs)
+    }
+    public static func && (lhs: Term, rhs: Term) -> Term {
+        return .binaryExpression(lhs, .and, rhs)
+    }
+
+    public static func || (lhs: Term, rhs: Bool) -> Term {
+        return .binaryExpression(lhs, .or, .bool(rhs))
+    }
+    public static func || (lhs: Bool, rhs: Term) -> Term {
+        return .binaryExpression(.bool(lhs), .or, rhs)
+    }
+    public static func || (lhs: Term, rhs: Term) -> Term {
+        return .binaryExpression(lhs, .or, rhs)
+    }
+}
+
+// Ambiguous operations on two terms
+extension Term {
+    public static func + (lhs: Term, rhs: Term) -> Term {
+        return .binaryExpression(lhs, .plus, rhs)
     }
 }
 
