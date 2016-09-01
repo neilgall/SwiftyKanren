@@ -19,7 +19,7 @@ run {
 
 run {
     x,y,z in [
-        x =~= z,
+        trace("x = z") ! x =~= z,
         y =~= 3,
         z =~= false
     ]
@@ -32,7 +32,6 @@ run {
 run {
     [appendo([1,2], $0, [1,2,3,4,5])]
 }
-
 
 run {
     [appendo([1,2], [3,4,5], $0)]

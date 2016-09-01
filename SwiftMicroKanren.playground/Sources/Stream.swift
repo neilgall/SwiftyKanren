@@ -77,11 +77,11 @@ extension Stream: CustomStringConvertible {
     public var description: String {
         switch self {
         case .empty:
-            return "[]"
+            return ""
         case .mature(let head, let tail):
-            return "[\(head)\(tail.internalDescription)]"
+            return "\(head)\(tail.internalDescription)"
         case .immature:
-            return "[...]"
+            return "..."
         }
     }
     
@@ -90,9 +90,9 @@ extension Stream: CustomStringConvertible {
         case .empty:
             return ""
         case .mature(let head, let tail):
-            return ", \(head)\(tail.internalDescription)"
+            return "; \(head)\(tail.internalDescription)"
         case .immature:
-            return ", ..."
+            return "; ..."
         }
     }
 }

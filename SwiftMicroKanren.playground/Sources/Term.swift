@@ -44,7 +44,7 @@ extension Term: CustomStringConvertible {
         case .string(let s): return "\"\(s)\""
         case .int(let i): return "\(i)"
         case .bool(let b): return "\(b)"
-        case .pair(let p, let q): return "(\(p),\(q))"
+        case .pair(let p, let q): return "(\(p), \(q))"
         }
     }
 }
@@ -133,8 +133,25 @@ extension Match: CustomStringConvertible {
         case .string(let s): return "\"\(s)\""
         case .int(let i): return "\(i)"
         case .bool(let b): return "\(b)"
-        case .pair(let a, let b): return "(\(a.description), \(b.description))"
         case .none: return "nil"
+        case .pair(let head, let tail):
+            switch tail {
+            case .pair, .none:
+                return "[\(head)\(tail.internalDescription)]"
+            default:
+                return "(\(head), \(tail))"
+            }
+        }
+    }
+    
+    private var internalDescription: String {
+        switch self {
+        case .none:
+            return ""
+        case .pair(let head, let tail):
+            return ", \(head)\(tail.internalDescription)"
+        default:
+            return description
         }
     }
 }

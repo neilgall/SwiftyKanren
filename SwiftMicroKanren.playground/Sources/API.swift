@@ -2,7 +2,13 @@ import Foundation
 
 public let emptyState = State()
 
-infix operator =~= : ComparisonPrecedence
+precedencegroup UnificationPrecedence {
+    associativity: left
+    higherThan: LogicalConjunctionPrecedence
+    lowerThan: ComparisonPrecedence
+}
+
+infix operator =~= : UnificationPrecedence
 public func =~= (lhs: Term, rhs: Term) -> Goal {
     return { state in state.unify(lhs, rhs) }
 }
