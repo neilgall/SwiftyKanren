@@ -47,7 +47,7 @@ The original miniKanren is embedded in Scheme and there are many other implement
 
 ## The DSL
 
-The language embedded in Swift aims to be an implementation of miniKanren, as far as Swift syntax and semantics allow. There are two main concept: _Terms_ and _Goals_. A `Term` is a value, which can be a string, integer, boolean, nil, or a pair of any of these. If you've read SICP you know that pairs allow you to implement lists. `Term` conforms to `ExpressibleByArrayLiteral` so you can write
+The language embedded in Swift aims to be an implementation of miniKanren, as far as Swift syntax and semantics allow. There are two main concepts: _Terms_ and _Goals_. A `Term` is a value, which can be a string, integer, boolean, nil, or a pair of any of these. If you've read SICP you know that pairs allow you to implement lists. `Term` conforms to `ExpressibleByArrayLiteral` so you can write
 
     [1,2,3]
 
@@ -65,7 +65,7 @@ The fundamental primitive for building `Goal`s is `=~=`, pronounced _unify_. It 
 
 This yields a `Goal` which unifies the variable `a` with the constant 2. Execute a group of `Goal`s with `run`:
 
-    run(goals: [fresh { a in a =~= 2}])
+    run(goals: [fresh { a in a =~= 2 }])
 
 All the goals provided to `run` must agree, in that they are executed as if combined with the `&&` operator. The return value of `run` is a `KanrenResult` which is just a typealias for `Stream<[Match]>`. A Stream is like an array but can be lazily evaluated to support goals with many or even infinite results. Calling the above version of `run` automatically pulls all the results from the stream. Each item in the stream is an array of `Match`, which is like a `Term` but cannot hold variables. In each result there is one `Match` for every variable introduced by `fresh` which unified to some value. In the above case there will be one result in the stream, containing one `Match` with the integer value 2. But that's not very interesting. We can assign 2 to `a` in any language.
 
@@ -141,7 +141,7 @@ Here there are three results containing "Bart", "Lisa" and "Maggie".
 
 ## Goal generators
 
-You can write your own `Goal` generation functions but combining existing ones. All you have to remember is that these functions must accept one or more `Term`s and always return a `Goal`. You can introduce new variables if that helps the definition of your goal:
+You can write your own `Goal` generation functions by combining existing ones. All you have to remember is that these functions must accept one or more `Term`s and always return a `Goal`. You can introduce new variables if that helps the definition of your goal:
 
     func grandparent(_ a: Term, _ b: Term) -> Goal {
         return fresh { c in
