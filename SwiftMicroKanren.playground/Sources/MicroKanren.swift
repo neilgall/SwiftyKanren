@@ -129,7 +129,7 @@ extension State {
         case .pair(let p, let q):
             return .pair(substitute(p), substitute(q))
         case .binaryExpression(let p, let op, let q):
-            return evaluate(lhs: substitute(p), operation: op, rhs: substitute(q)) ?? t
+            return evaluate(lhs: walk(p), operation: op, rhs: walk(q)) ?? t
         default:
             return t
         }
@@ -188,6 +188,13 @@ extension State {
         switch unifyExpr(walk(lhs), walk(rhs)) {
         case .none: return []
         case .some(let newSubs): return [adding(subs: newSubs)]
+        }
+    }
+    
+    public func disunify(_ lhs: Term, _ rhs: Term) -> Stream<State> {
+        switch unifyExpr(walk(lhs), walk(rhs)) {
+        case .none: return [self]
+        case .some: return []
         }
     }
 }

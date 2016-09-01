@@ -80,7 +80,7 @@ extension Term: CustomStringConvertible {
         case .pair(let p, let q):
             return "(\(p), \(q))"
         case .binaryExpression(let t1, let op, let t2):
-            return "\(t1) \(op) \(t2)"
+            return "(\(t1) \(op.rawValue) \(t2))"
         }
     }
 }

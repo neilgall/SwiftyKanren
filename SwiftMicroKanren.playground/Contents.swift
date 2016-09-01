@@ -11,19 +11,6 @@ run(taking: 10, goals: [fresh(fives)])
 run(taking: 10, goals: [fresh(fives) || fresh(sixes)])
 
 run {
-    [14 =~= $0 + 2, 14 =~= $1 - 2, 14 =~= $2 * 2, 14 =~= $3 / 2]
-}
-run {
-    [15 =~= 3 + $0, 15 =~= 3 - $1, 15 =~= 3 * $2, 5 =~= 3 / $3]
-}
-run {
-    [$0 + 6 =~= 10, $1 - 6 =~= 10, $2 * 4 =~= 20, $3 / 4 =~= 5]
-}
-run {
-    [8 + $0 =~= 10, 18 - $1 =~= 10, 18 * $2 =~= 54, 18 / $3 =~= 9]
-}
-
-run {
     [appendo($0, [4,5], [1,2,3,4,5])]
 }
 
@@ -78,3 +65,31 @@ run {
 run {
     [grandparent($0, "Bart")]
 }
+
+// DOG + CAT = BAD
+//run { digits, d, o, g, c in
+//    [digits =~= [0,1,2,3,4,5,6,7,8,9],
+//     membero(d, digits),
+//     membero(o, digits), o =/= d,
+//     membero(g, digits), g =/= d, g =/= o,
+//     membero(c, digits), c =/= d, c =/= o, c =/= g,
+//     fresh { a, t, b in conj(
+//        membero(a, digits), a =/= d, a =/= o, a =/= g, a =/= c,
+//        membero(t, digits), t =/= d, t =/= o, t =/= g, t =/= c, t =/= a,
+//        membero(b, digits), b =/= d, b =/= o, b =/= g, b =/= c, b =/= a, b =/= t,
+//        d + c =~= b,
+//        o + a =~= a,
+//        g + t =~= d
+//    )}]
+//}
+
+let digits: Term = [0,1,2,3,4,5,6,7,8,9]
+
+print(run { x in
+    [fresh { a,b,c in conj(
+        membero(a, digits), a =/= 0,
+        membero(b, digits), b =/= a,
+        membero(c, digits), c =/= a, c =/= b,
+        x =~= 100 * a + 10 * b + c)
+        }]
+})

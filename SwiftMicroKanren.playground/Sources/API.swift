@@ -13,6 +13,11 @@ public func =~= (lhs: Term, rhs: Term) -> Goal {
     return { state in state.unify(lhs, rhs) }
 }
 
+infix operator =/=: UnificationPrecedence
+public func =/= (lhs: Term, rhs: Term) -> Goal {
+    return { state in state.disunify(lhs, rhs) }
+}
+
 public func fresh(_ f: @escaping (Term) -> Goal) -> Goal {
     return { state in state.withNewVar(run: f) }
 }
