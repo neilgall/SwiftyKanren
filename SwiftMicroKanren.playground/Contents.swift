@@ -11,21 +11,6 @@ run(taking: 10, from: [fresh(fives)])
 run(taking: 10, from: [fresh(fives) || fresh(sixes)])
 
 run {
-    a, b in [
-        a =~= "quark",
-        b =~= "foo" || b =~= "bar"
-    ]
-}
-
-run {
-    x,y,z in [
-        trace("x = z") ! x =~= z,
-        y =~= 3,
-        z =~= false
-    ]
-}
-
-run {
     [appendo($0, [4,5], [1,2,3,4,5])]
 }
 
@@ -41,3 +26,38 @@ run {
     [appendo($0, $1, [1,2,3,4,5])]
 }
 
+run {
+    [membero($0, [1,2,3,4,5])]
+}
+
+run {
+    [membero(3, [$0, $1, 3])]
+}
+
+let parent = relation(facts:
+    ["Homer", "Bart"],
+    ["Homer", "Lisa"],
+    ["Homer", "Maggie"],
+    ["Marge", "Bart"],
+    ["Marge", "Lisa"],
+    ["Marge", "Maggie"],
+    ["Abe", "Homer"]
+)
+
+func grandparent(_ a: Term, _ b: Term) -> Goal {
+    return fresh { c in
+        parent(a, c) && parent(c, b)
+    }
+}
+
+run {
+    [parent($0, "Bart")]
+}
+
+run {
+    [parent("Homer", $0)]
+}
+
+run {
+    [grandparent($0, "Bart")]
+}

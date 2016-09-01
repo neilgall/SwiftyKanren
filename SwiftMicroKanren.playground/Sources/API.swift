@@ -25,7 +25,7 @@ public func zzz(_ goal: Goal) -> Goal {
 public func conj_(_ goals: [Goal]) -> Goal {
     switch goals.count {
     case 0: return { state in [state] }
-    case 1: return zzz(goals[0])
+    case 1: return goals[0]
     default: return { state in goals.reduce([state]) { states, goal in states.flatMap(zzz(goal)) }}
     }
 }
@@ -45,18 +45,13 @@ public func disj(_ goals: Goal...) -> Goal {
 
 // Infix conj and disj
 public func && (lhs: Goal, rhs: Goal) -> Goal {
-    return { state in zzz(lhs)(state).flatMap(zzz(rhs)) }
+    return { state in lhs(state).flatMap(zzz(rhs)) }
 }
 
 public func || (lhs: Goal, rhs: Goal) -> Goal {
-    return { state in zzz(lhs)(state) + zzz(rhs)(state) }
+    return { state in lhs(state) + zzz(rhs)(state) }
 }
 
-
-// Conde
-public func conde(_ clauses: [Goal]...) -> Goal {
-    return disj_(clauses.map(conj_))
-}
 
 // Convenience fresh functions for introducing multiple variables at once
 public func fresh(_ f: @escaping (Term, Term) -> Goal) -> Goal {
