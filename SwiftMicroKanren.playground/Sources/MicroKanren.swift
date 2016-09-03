@@ -13,89 +13,6 @@ extension Dictionary {
     }
 }
 
-private func evaluate(lhs: Term, operation op: BinaryOperation, rhs: Term) -> Term? {
-    switch op {
-    case .plus:
-        switch (lhs, rhs) {
-        case (.int(let i1), .int(let i2)):
-            return .int(i1 + i2)
-        case (.string(let s1), .string(let s2)):
-            return .string(s1 + s2)
-        default:
-            return nil
-        }
-    case .minus:
-        guard case .int(let i1) = lhs, case .int(let i2) = rhs else { return nil }
-        return .int(i1 - i2)
-    case .multiply:
-        guard case .int(let i1) = lhs, case .int(let i2) = rhs else { return nil }
-        return .int(i1 * i2)
-    case .divide:
-        guard case .int(let i1) = lhs, case .int(let i2) = rhs else { return nil }
-        return .int(i1 / i2)
-    case .mod:
-        guard case .int(let i1) = lhs, case .int(let i2) = rhs else { return nil }
-        return .int(i1 % i2)
-    case .and:
-        guard case .bool(let b1) = lhs, case .bool(let b2) = rhs else { return nil }
-        return .bool(b1 && b2)
-    case .or:
-        guard case .bool(let b1) = lhs, case .bool(let b2) = rhs else { return nil }
-        return .bool(b1 || b2)
-    }
-}
-
-private func reverseEvaluateLHS(operation op: BinaryOperation, rhs: Term, result: Term) -> Term? {
-    switch op {
-    case .plus:
-        guard case .int(let i1) = result, case .int(let i2) = rhs else { return nil }
-        return .int(i1 - i2)
-    case .minus:
-        guard case .int(let i1) = result, case .int(let i2) = rhs else { return nil }
-        return .int(i1 + i2)
-    case .multiply:
-        guard case .int(let i1) = result, case .int(let i2) = rhs else { return nil }
-        return .int(i1 / i2)
-    case .divide:
-        guard case .int(let i1) = result, case .int(let i2) = rhs else { return nil }
-        return .int(i1 * i2)
-    case .mod:
-        return nil
-    case .and:
-        guard case .bool(let b1) = result, case .bool(let b2) = rhs, b2 else { return nil }
-        return .bool(b1)
-    case .or:
-        guard case .bool(let b1) = result, case .bool(let b2) = rhs, !b2 else { return nil }
-        return .bool(b1)
-    }
-}
-
-private func reverseEvaluateRHS(lhs: Term, operation op: BinaryOperation, result: Term) -> Term? {
-    print(lhs, result, op)
-    switch op {
-    case .plus:
-        guard case .int(let i1) = result, case .int(let i2) = lhs else { return nil }
-        return .int(i1 - i2)
-    case .minus:
-        guard case .int(let i1) = result, case .int(let i2) = lhs else { return nil }
-        return .int(-(i1 - i2))
-    case .multiply:
-        guard case .int(let i1) = result, case .int(let i2) = lhs else { return nil }
-        return .int(i1 / i2)
-    case .divide:
-        guard case .int(let i1) = result, case .int(let i2) = lhs else { return nil }
-        return .int(i2 / i1)
-    case .mod:
-        return nil
-    case .and:
-        guard case .bool(let b1) = result, case .bool(let b2) = lhs, b2 else { return nil }
-        return .bool(b1)
-    case .or:
-        guard case .bool(let b1) = result, case .bool(let b2) = lhs, !b2 else { return nil }
-        return .bool(b1)
-    }
-}
-
 public struct State {
     let subs: Substitutions
     let vars: Int
@@ -129,55 +46,54 @@ extension State {
         case .pair(let p, let q):
             return .pair(substitute(p), substitute(q))
         case .binaryExpression(let p, let op, let q):
-            return evaluate(lhs: walk(p), operation: op, rhs: walk(q)) ?? t
+            return op.evaluate(lhs: walk(p), rhs: walk(q)) ?? t
         default:
             return t
         }
     }
     
-    func unifyExpr(_ lhs: Term, _ rhs: Term) -> Substitutions? {
+    func unifyExpr(_ lhs: Term, _ rhs: Term) -> Stream<Substitutions>? {
+        let unified: Stream<Substitutions> = .mature(head: [:], tail: .empty)
+        
         switch (lhs, rhs) {
 
         case (.string(let s1), .string(let s2)) where s1 == s2:
-            return [:]
+            return unified
         
         case (.int(let i1), .int(let i2)) where i1 == i2:
-            return [:]
+            return unified
         
         case (.bool(let b1), .bool(let b2)) where b1 == b2:
-            return [:]
+            return unified
             
         case (.none, .none):
-            return [:]
+            return unified
 
         case (.pair(let p1, let q1), .pair(let p2, let q2)):
-            if let p = unifyExpr(p1, p2), let q = unifyExpr(q1, q2) {
-                return p.union(q)
-            } else {
-                return nil
-            }
+            guard let ps = unifyExpr(p1, p2), let qs = unifyExpr(q1, q2) else { return nil }
+            return ps.flatMap { p in qs.map { q in p.union(q) } }
 
         case (.variable, _):
-            return [lhs: rhs]
+            return [ [lhs: rhs] ]
         
         case (_, .variable):
-            return [rhs: lhs]
+            return [ [rhs: lhs] ]
         
         case (.binaryExpression(.variable(let v), let op, let exprRHS), _):
-            guard let exprLHS = reverseEvaluateLHS(operation: op, rhs: exprRHS, result: rhs) else { return nil }
-            return [.variable(v): exprLHS]
+            guard let exprLHS = op.reverseEvaluateLHS(rhs: exprRHS, result: rhs) else { return nil }
+            return  exprLHS.map { [.variable(v): $0] }
 
         case (.binaryExpression(let exprLHS, let op, .variable(let v)), _):
-            guard let exprRHS = reverseEvaluateRHS(lhs: exprLHS, operation: op, result: rhs) else { return nil }
-            return [.variable(v): exprRHS]
+            guard let exprRHS = op.reverseEvaluateRHS(lhs: exprLHS, result: rhs) else { return nil }
+            return exprRHS.map { [.variable(v): $0] }
 
         case (_, .binaryExpression(.variable(let v), let op, let exprRHS)):
-            guard let exprLHS = reverseEvaluateLHS(operation: op, rhs: exprRHS, result: lhs) else { return nil }
-            return [.variable(v): exprLHS]
+            guard let exprLHS = op.reverseEvaluateLHS(rhs: exprRHS, result: lhs) else { return nil }
+            return exprLHS.map { [.variable(v): $0] }
             
         case (_, .binaryExpression(let exprLHS, let op, .variable(let v))):
-            guard let exprRHS = reverseEvaluateRHS(lhs: exprLHS, operation: op, result: lhs) else { return nil }
-            return [.variable(v): exprRHS]
+            guard let exprRHS = op.reverseEvaluateRHS(lhs: exprLHS, result: lhs) else { return nil }
+            return exprRHS.map { [.variable(v): $0] }
 
         default:
             return nil
@@ -187,7 +103,7 @@ extension State {
    public func unify(_ lhs: Term, _ rhs: Term) -> Stream<State> {
         switch unifyExpr(walk(lhs), walk(rhs)) {
         case .none: return []
-        case .some(let newSubs): return [adding(subs: newSubs)]
+        case .some(let newSubs): return newSubs.map { self.adding(subs: $0) }
         }
     }
     

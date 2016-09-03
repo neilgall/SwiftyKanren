@@ -1,5 +1,13 @@
 // -- Examples --
 
+run {
+    [$0 + 5 =~= 9]
+}
+
+run {
+    [($0 && false) =~= false]
+}
+
 func fives(t: Term) -> Goal {
     return fresh { $0 =~= 5 } || fresh(fives)
 }
