@@ -91,13 +91,13 @@ run {
 //    )}]
 //}
 
-let digits: Term = [0,1,2,3,4,5,6,7,8,9]
-
-print(run { x in
-    [fresh { a,b,c in conj(
-        membero(a, digits), a =/= 0,
-        membero(b, digits), b =/= a,
-        membero(c, digits), c =/= a, c =/= b,
-        x =~= 100 * a + 10 * b + c)
-        }]
-})
+//let digits: Term = [0,1,2,3,4,5,6,7,8,9]
+//
+//print(run { x in
+//    [fresh { a,b,c in conj(
+//        membero(a, digits), a =/= 0,
+//        membero(b, digits), b =/= a,
+//        membero(c, digits), c =/= a, c =/= b,
+//        x =~= 100 * a + 10 * b + c)
+//        }]
+//})

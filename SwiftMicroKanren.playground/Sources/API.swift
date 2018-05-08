@@ -23,7 +23,7 @@ public func fresh(_ f: @escaping (Term) -> Goal) -> Goal {
 }
 
 // Snooze
-public func zzz(_ goal: Goal) -> Goal {
+public func zzz(_ goal: @escaping Goal) -> Goal {
     return { state in .immature(get: { goal(state) }) }
 }
 
@@ -49,11 +49,11 @@ public func disj(_ goals: Goal...) -> Goal {
 }
 
 // Infix conj and disj
-public func && (lhs: Goal, rhs: Goal) -> Goal {
+public func && (lhs: @escaping Goal, rhs: @escaping Goal) -> Goal {
     return { state in lhs(state).flatMap(zzz(rhs)) }
 }
 
-public func || (lhs: Goal, rhs: Goal) -> Goal {
+public func || (lhs: @escaping Goal, rhs: @escaping Goal) -> Goal {
     return { state in lhs(state) + zzz(rhs)(state) }
 }
 
@@ -107,7 +107,7 @@ public func reify(count: Int) -> (State) -> [Match] {
 }
 
 public func reifyMatching(state: State) -> [Match] {
-    return (0..<state.vars).flatMap { (i: Int) -> Match? in
+    return (0..<state.vars).compactMap { (i: Int) -> Match? in
         let r = state.walk(.variable(i))
         let m = Match(term: r)
         return m == .none ? nil : m

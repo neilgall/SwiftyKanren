@@ -9,6 +9,6 @@ private func unify(fact: Fact, withTerms terms: [Term]) -> Goal? {
 
 public func relation(facts: Fact...) -> (Term...) -> Goal {
     return { (terms: Term...) in
-        return disj_(facts.flatMap { unify(fact: $0, withTerms: terms) })
+        return disj_(facts.compactMap { unify(fact: $0, withTerms: terms) })
     }
 }
