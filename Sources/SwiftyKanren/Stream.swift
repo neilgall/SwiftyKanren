@@ -6,6 +6,27 @@ public enum Stream<T> {
     indirect case immature(get: () -> (Stream<T>))
 }
 
+public struct StreamSequence<T>: Sequence, IteratorProtocol {
+    private var stream: Stream<T>
+
+    init(from stream: Stream<T>) {
+        self.stream = stream
+    }
+
+    public mutating func next() -> T? {
+        switch stream {
+            case .empty:
+                return nil
+            case .mature(let head, let tail):
+                stream = tail
+                return head
+            case .immature(let get):
+                stream = get()
+                return next()
+        }
+    }
+}
+
 extension Stream {
     public static func + (lhs: Stream<T>, rhs: Stream<T>) -> Stream<T> {
         switch (lhs, rhs) {
@@ -65,7 +86,12 @@ extension Stream {
             return get().takeAll()
         }
     }
+
+    public func toSequence() -> StreamSequence<T> {
+        return StreamSequence(from: self)
+    }
 }
+
 
 extension Stream: ExpressibleByArrayLiteral {
     public init(arrayLiteral elements: T...) {

@@ -44,22 +44,31 @@ extension Term: Equatable {
 }
 
 extension Term: Hashable {
-    public var hashValue: Int {
+    public func hash(into hasher: inout Hasher) {
         switch self {
         case .none:
-            return 0
+            hasher.combine("none")
         case .variable(let n):
-            return n.hashValue
+            hasher.combine("var")
+            hasher.combine(n)
         case .string(let s):
-            return s.hashValue
+            hasher.combine("str")
+            hasher.combine(s)
         case .int(let i):
-            return i.hashValue
+            hasher.combine("int")
+            hasher.combine(i)
         case .bool(let b):
-            return b.hashValue
+            hasher.combine("bool")
+            hasher.combine(b)
         case .pair(let p, let q):
-            return (p.hashValue * 31) ^ q.hashValue
+            hasher.combine("pair")
+            hasher.combine(p)
+            hasher.combine(q)
         case .binaryExpression(let t1, let op, let t2):
-            return ((t1.hashValue * 31) ^ op.hashValue * 31) ^ t2.hashValue
+            hasher.combine("bin")
+            hasher.combine(t1)
+            hasher.combine(op)
+            hasher.combine(t2)
         }
     }
 }
@@ -282,3 +291,40 @@ extension Match: CustomStringConvertible {
     }
 }
 
+extension Match: ExpressibleByNilLiteral {
+    public init(nilLiteral: ()) {
+        self = .none
+    }
+}
+
+extension Match: ExpressibleByBooleanLiteral {
+    public init(booleanLiteral value: Bool) {
+        self = .bool(value)
+    }
+}
+
+extension Match: ExpressibleByIntegerLiteral {
+    public init(integerLiteral value: Int) {
+        self = .int(value)
+    }
+}
+
+extension Match: ExpressibleByStringLiteral {
+    public init(stringLiteral value: String) {
+        self = .string(value)
+    }
+    
+    public init(extendedGraphemeClusterLiteral value: Character) {
+        self = .string(String(value))
+    }
+    
+    public init(unicodeScalarLiteral value: UnicodeScalar) {
+        self = .string(String(value))
+    }
+}
+
+extension Match: ExpressibleByArrayLiteral {
+    public init(arrayLiteral elements: Match...) {
+        self = elements.reversed().reduce(.none) { list, element in .pair(element, list) }
+    }
+}

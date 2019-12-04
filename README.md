@@ -1,9 +1,7 @@
 # SwiftyKanren
-Swift 4 implementation of µKanren. Definitely a work in progress. Requires Xcode 9. Also see my [Kotlin](https://github.com/neilgall/KotlinKanren) port.
+Swift 4 implementation of µKanren. I have also done a Kotlin port [here](https://github.com/neilgall/KotlinKanren).
 
 See the original paper at http://webyrd.net/scheme-2013/papers/HemannMuKanren2013.pdf
-
-Right now this is in a development state and all runs in a Swift Playground. It's the easiest way to play with the code live as I'm working on it.
 
 ## What's going on?
 [miniKanren](http://www.minikanren.org)'s website describes it as a Domain Specific Language for logic programming. Logic programming is somewhat different from most other kinds of programming. Rather than tell the computer exactly what to do, we describe the problem to be solved. Unknowns are left as placeholders and the logic system finds solutions to them.

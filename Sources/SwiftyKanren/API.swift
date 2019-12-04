@@ -95,7 +95,7 @@ public func fresh(_ f: @escaping (Term, Term, Term, Term, Term) -> Goal) -> Goal
     }
 }
 
-public typealias KanrenResult = Stream<[Match]>
+public typealias KanrenResult = StreamSequence<[Match]>
 
 public func reify(count: Int) -> (State) -> [Match] {
     return { state in
@@ -125,32 +125,32 @@ private func take(from goal: Goal, results count: Int?) -> Stream<State> {
 }
 
 // Run
-public func run(taking count: Int? = nil, goals: [Goal]) -> KanrenResult {
-    return take(from: conj_(goals), results: count).map(reifyMatching)
+public func runKanren(taking count: Int? = nil, goals: [Goal]) -> KanrenResult {
+    return take(from: conj_(goals), results: count).map(reifyMatching).toSequence()
 }
 
-public func run(taking count: Int? = nil, from goals: @escaping (Term) -> [Goal]) -> KanrenResult {
+public func runKanren(taking count: Int? = nil, from goals: @escaping (Term) -> [Goal]) -> KanrenResult {
     let goal = fresh { a in conj_(goals(a)) }
-    return take(from: goal, results: count).map(reify(count: 1))
+    return take(from: goal, results: count).map(reify(count: 1)).toSequence()
 }
 
-public func run(taking count: Int? = nil, from goals: @escaping (Term, Term) -> [Goal]) -> KanrenResult {
+public func runKanren(taking count: Int? = nil, from goals: @escaping (Term, Term) -> [Goal]) -> KanrenResult {
     let goal = fresh { a, b in conj_(goals(a, b)) }
-    return take(from: goal, results: count).map(reify(count: 2))
+    return take(from: goal, results: count).map(reify(count: 2)).toSequence()
 }
 
-public func run(taking count: Int? = nil, from goals: @escaping (Term, Term, Term) -> [Goal]) -> KanrenResult {
+public func runKanren(taking count: Int? = nil, from goals: @escaping (Term, Term, Term) -> [Goal]) -> KanrenResult {
     let goal = fresh { a, b, c in conj_(goals(a, b, c)) }
-    return take(from: goal, results: count).map(reify(count: 3))
+    return take(from: goal, results: count).map(reify(count: 3)).toSequence()
 }
 
-public func run(taking count: Int? = nil, from goals: @escaping (Term, Term, Term, Term) -> [Goal]) -> KanrenResult {
+public func runKanren(taking count: Int? = nil, from goals: @escaping (Term, Term, Term, Term) -> [Goal]) -> KanrenResult {
     let goal = fresh { a, b, c, d in conj_(goals(a, b, c, d)) }
-    return take(from: goal, results: count).map(reify(count: 4))
+    return take(from: goal, results: count).map(reify(count: 4)).toSequence()
 }
 
-public func run(taking count: Int? = nil, from goals: @escaping (Term, Term, Term, Term, Term) -> [Goal]) -> KanrenResult {
+public func runKanren(taking count: Int? = nil, from goals: @escaping (Term, Term, Term, Term, Term) -> [Goal]) -> KanrenResult {
     let goal = fresh { a, b, c, d, e in  conj_(goals(a, b, c, d, e)) }
-    return take(from: goal, results: count).map(reify(count: 5))
+    return take(from: goal, results: count).map(reify(count: 5)).toSequence()
 }
 
